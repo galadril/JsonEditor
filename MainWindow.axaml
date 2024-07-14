@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="https://github.com/avaloniaui/d"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        x:Class="JsonEditor.MainWindow"
+        Title="JSON Editor">
+	<StackPanel>
+		<TextBlock Text="JSON Visual Editor" FontSize="20" Margin="16"/>
+		<StackPanel Orientation="Horizontal" Margin="16">
+			<Button x:Name="LoadJsonButton" Content="Load JSON" Margin="0,0,8,0"/>
+			<Button x:Name="SaveJsonButton" Content="Save JSON"/>
+		</StackPanel>
+		<ScrollViewer Margin="16">
+			<StackPanel x:Name="JsonEditorPanel"/>
+		</ScrollViewer>
+	</StackPanel>
+</Window>
