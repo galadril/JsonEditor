@@ -1,14 +1,13 @@
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Data;
 using Avalonia.Markup.Xaml;
-using Avalonia.Styling;
+using AvaloniaEdit;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
+using Avalonia.Media;
+using Avalonia.Styling;
 
 namespace JsonEditor
 {
@@ -30,17 +29,30 @@ namespace JsonEditor
                 var viewModel = (MainWindowViewModel)DataContext;
                 await viewModel.LoadJson(this);
                 UpdateJsonEditorPanel(viewModel.JsonData);
+                UpdateJsonRawEditor(viewModel.JsonData);
             };
 
             saveButton.Click += async (sender, e) =>
             {
                 await SaveJson();
             };
+
+            var tabControl = this.FindControl<TabControl>("TabControl");
+            tabControl.SelectionChanged += TabControl_SelectionChanged;
+        }
+
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            var jsonObject = ProcessPanel(JsonEditorPanel);
+            var jsonString = JsonSerializer.Serialize(jsonObject, new JsonSerializerOptions { WriteIndented = true });
+            JsonRawEditor.Text = jsonString;
         }
 
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
+            JsonRawEditor = this.FindControl<TextEditor>("JsonRawEditor");
+            JsonEditorPanel = this.FindControl<StackPanel>("JsonEditorPanel");
         }
 
         private async Task SaveJson()
@@ -55,50 +67,6 @@ namespace JsonEditor
                 await File.WriteAllTextAsync(path, jsonString);
             }
         }
-        private object ProcessControl(Control control)
-        {
-            if (control.Tag is JsonValueKind valueKind)
-            {
-                switch (valueKind)
-                {
-                    case JsonValueKind.String:
-                        if (control is TextBox textBox)
-                        {
-                            return textBox.Text;
-                        }
-                        break;
-                    case JsonValueKind.Number:
-                        if (control is TextBox textBox2)
-                        {
-                            if (double.TryParse(textBox2.Text, out var number))
-                            {
-                                return number;
-                            }
-                        }
-                        break;
-                    case JsonValueKind.True:
-                    case JsonValueKind.False:
-                        if (control is CheckBox checkBox)
-                        {
-                            return checkBox.IsChecked == true;
-                        }
-                        break;
-                    case JsonValueKind.Object:
-                        if (control is StackPanel panel)
-                        {
-                            return ProcessPanel(panel);
-                        }
-                        break;
-                    case JsonValueKind.Array:
-                        if (control is StackPanel arrayPanel)
-                        {
-                            return ProcessArrayPanel(arrayPanel);
-                        }
-                        break;
-                }
-            }
-            return null;
-        }
 
         private Dictionary<string, object> ProcessPanel(Panel panel)
         {
@@ -108,41 +76,48 @@ namespace JsonEditor
             var result = new Dictionary<string, object>();
             foreach (Control child in panel.Children)
             {
-                if (child is StackPanel stackPanel && stackPanel.Children[0] is TextBlock keyTextBlock)
+                if (child is StackPanel stackPanel && stackPanel.Children.Count > 1 && stackPanel.Children[0] is TextBlock keyTextBlock)
                 {
                     var key = keyTextBlock.Text;
-                    if (stackPanel.Children.Count > 1 && stackPanel.Children[1] is Control valueControl)
+                    var valueControl = stackPanel.Children[1] as Control;
+                    var value = ProcessControl(valueControl);
+                    if (value != null)
                     {
-                        var value = ProcessControl(valueControl);
-                        if (value != null)
-                        {
-                            result[key] = value;
-                        }
+                        result[key] = value;
                     }
                 }
             }
             return result;
         }
 
-        private List<object> ProcessArrayPanel(Panel panel)
+        private object ProcessControl(Control control)
         {
-            var array = new List<object>();
-            foreach (Control itemControl in panel.Children)
+            if (control == null)
+                return null;
+
+            switch (control)
             {
-                var value = ProcessControl(itemControl);
-                if (value != null)
-                {
-                    array.Add(value);
-                }
+                case TextBox textBox:
+                    return textBox.Text;
+                case CheckBox checkBox:
+                    return checkBox.IsChecked == true;
+                case StackPanel stackPanel:
+                    if (stackPanel.Children.Count > 0 && stackPanel.Children[0] is TextBlock)
+                    {
+                        return ProcessPanel(stackPanel);
+                    }
+                    break;
+                default:
+                    // Handle other control types if needed
+                    break;
             }
-            return array;
+
+            return null;
         }
 
         private void UpdateJsonEditorPanel(Dictionary<string, object> jsonData)
         {
-            JsonEditorPanel = this.FindControl<StackPanel>("JsonEditorPanel");
             JsonEditorPanel.Children.Clear();
-
             if (jsonData != null)
             {
                 GenerateUI(jsonData, JsonEditorPanel);
@@ -222,17 +197,22 @@ namespace JsonEditor
             // Moved outside the switch statement
             if (value is JsonElement element && element.ValueKind == JsonValueKind.Array && !isArrayItem && arrayPanel != null)
             {
-                var addButton = new Button { Content = "Add", Margin = new Thickness(5, 0, 0, 0) };
+                var addButton = new Button { Margin = new Thickness(5, 0, 0, 0) };
+                var pathIcon = new PathIcon
+                {
+                    Data = Geometry.Parse("M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z"),
+                    Width = 16,
+                    Height = 16
+                };
+
+                addButton.Content = pathIcon;
                 addButton.Click += (sender, e) => AddArrayItem(key, arrayPanel, element);
+
                 arrayPanel.Children.Add(addButton);
             }
 
-            if (control != null)
-            {
-                // Tag the control with the JsonValueKind to use later during saving
-                control.Tag = valueKind;
-            }
-
+            // Tag the control with the JsonValueKind to use later during saving
+            control.Tag = valueKind;
             return control;
         }
 
@@ -282,6 +262,19 @@ namespace JsonEditor
             using (JsonDocument doc = JsonDocument.Parse(jsonRepresentation))
             {
                 return doc.RootElement.Clone();
+            }
+        }
+
+        private void UpdateJsonRawEditor(Dictionary<string, object> jsonData)
+        {
+            if (jsonData != null)
+            {
+                var jsonString = JsonSerializer.Serialize(jsonData, new JsonSerializerOptions { WriteIndented = true });
+                JsonRawEditor.Text = jsonString;
+            }
+            else
+            {
+                JsonRawEditor.Text = string.Empty;
             }
         }
     }

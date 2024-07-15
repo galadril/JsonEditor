@@ -2,17 +2,43 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="https://github.com/avaloniaui/d"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:AvaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         mc:Ignorable="d"
         x:Class="JsonEditor.MainWindow"
-        Title="JSON Editor">
-	<StackPanel>
-		<TextBlock Text="JSON Visual Editor" FontSize="20" Margin="16"/>
-		<StackPanel Orientation="Horizontal" Margin="16">
-			<Button x:Name="LoadJsonButton" Content="Load JSON" Margin="0,0,8,0"/>
-			<Button x:Name="SaveJsonButton" Content="Save JSON"/>
+        Title="JSON Editor"
+        Width="800" Height="600">
+	<Grid>
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="Auto"/>
+			<RowDefinition Height="*"/>
+		</Grid.RowDefinitions>
+		<TextBlock Text="JSON Visual Editor" FontSize="20" Margin="16" Grid.Row="0"/>
+		<StackPanel Orientation="Horizontal" Margin="16" Grid.Row="1">
+			<Button x:Name="LoadJsonButton" Margin="0,0,8,0">
+				<Button.Content>
+					<Path Data="M7 12C7.55228 12 8 11.5523 8 11C8 10.4477 7.55228 10 7 10C6.44772 10 6 10.4477 6 11C6 11.5523 6.44772 12 7 12Z M11 11C11 11.5523 10.5523 12 10 12C9.44772 12 9 11.5523 9 11C9 10.4477 9.44772 10 10 10C10.5523 10 11 10.4477 11 11Z M13 12C13.5523 12 14 11.5523 14 11C14 10.4477 13.5523 10 13 10C12.4477 10 12 10.4477 12 11C12 11.5523 12.4477 12 13 12Z M3 5.5C3 4.11929 4.11929 3 5.5 3H14.5C15.8807 3 17 4.11929 17 5.5V14.5C17 15.8807 15.8807 17 14.5 17H5.5C4.11929 17 3 15.8807 3 14.5V5.5ZM5.5 4C4.67157 4 4 4.67157 4 5.5V14.5C4 15.3284 4.67157 16 5.5 16H14.5C15.3284 16 16 15.3284 16 14.5V7H9.5C8.67157 7 8 6.32843 8 5.5V4H5.5ZM16 5.5C16 4.67157 15.3284 4 14.5 4H9V5.5C9 5.77614 9.22386 6 9.5 6H16V5.5Z" Fill="White" Width="24" Height="24"/>
+				</Button.Content>
+			</Button>
+			<Button x:Name="SaveJsonButton">
+				<Button.Content>
+					<Path Data="M5.75 3C4.23122 3 3 4.23122 3 5.75V18.25C3 19.7688 4.23122 21 5.75 21H9.99852C9.99129 20.8075 10.011 20.6088 10.0613 20.4075L10.2882 19.5H7.5V14.25C7.5 13.8358 7.83579 13.5 8.25 13.5H14.8531L16.2883 12.0648C16.1158 12.0225 15.9355 12 15.75 12H8.25C7.00736 12 6 13.0074 6 14.25V19.5H5.75C5.05964 19.5 4.5 18.9404 4.5 18.25V5.75C4.5 5.05964 5.05964 4.5 5.75 4.5H7V7.25C7 8.49264 8.00736 9.5 9.25 9.5H13.75C14.9926 9.5 16 8.49264 16 7.25V4.52344C16.3582 4.58269 16.6918 4.75246 16.9519 5.01256L18.9874 7.0481C19.3156 7.37629 19.5 7.8214 19.5 8.28553V10.007C19.5709 10.0024 19.642 10 19.713 10H19.7151C20.1521 10.0002 20.59 10.0874 21 10.2615V8.28553C21 7.42358 20.6576 6.59693 20.0481 5.98744L18.0126 3.9519C17.4031 3.34241 16.5764 3 15.7145 3H5.75ZM8.5 7.25V4.5H14.5V7.25C14.5 7.66421 14.1642 8 13.75 8H9.25C8.83579 8 8.5 7.66421 8.5 7.25Z M19.7152 11H19.7131C19.1285 11.0003 18.5439 11.2234 18.0979 11.6695L12.1955 17.5719C11.8513 17.916 11.6072 18.3472 11.4892 18.8194L11.0315 20.6501C10.8325 21.4462 11.5536 22.1674 12.3497 21.9683L14.1804 21.5106C14.6526 21.3926 15.0838 21.1485 15.4279 20.8043L21.3303 14.9019C22.223 14.0093 22.223 12.5621 21.3303 11.6695C20.8843 11.2234 20.2998 11.0003 19.7152 11Z" Fill="White" Width="24" Height="24"/>
+				</Button.Content>
+			</Button>
 		</StackPanel>
-		<ScrollViewer Margin="16">
-			<StackPanel x:Name="JsonEditorPanel"/>
-		</ScrollViewer>
-	</StackPanel>
+		<TabControl Name="TabControl" Grid.Row="2">
+			<TabItem Header="Generated Controls">
+				<ScrollViewer VerticalScrollBarVisibility="Auto">
+					<StackPanel Name="JsonEditorPanel" Orientation="Vertical" Margin="10"/>
+				</ScrollViewer>
+			</TabItem><TabItem Header="Raw Editor">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <StackPanel Name="JsonRawEditorStack" Orientation="Vertical" Margin="10"><TextBlock Text="JSON Visual Editor" FontSize="20" Margin="16" Grid.Row="0"/>
+
+                        <AvaloniaEdit:TextEditor Name="JsonRawEditor" Text="PLACEHOLDER" Margin="10" WordWrap="True"/>
+					</StackPanel>
+                </ScrollViewer>
+            </TabItem>
+		</TabControl>
+	</Grid>
 </Window>
