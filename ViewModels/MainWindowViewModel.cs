@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Input;
 
@@ -42,12 +43,38 @@ namespace JsonEditor
                 JsonData = DeserializeJson(json);
             }
         }
+        private static string RemoveCommentsAndEscapeNewlines(string json)
+        {
+            // Remove comments only outside of strings
+            var pattern = @"(?<string>(""(?:[^""\\]|\\.)*""))|(?<comment>(\/\/.*?$|\/\*.*?\*\/))";
+            var noCommentsJson = Regex.Replace(json, pattern, match =>
+            {
+                if (match.Groups["string"].Success)
+                {
+                    return match.Groups["string"].Value;
+                }
+                else
+                {
+                    return string.Empty;
+                }
+            }, RegexOptions.Multiline);
+
+            // Escape newlines within JSON strings
+            noCommentsJson = noCommentsJson.Replace("\n", "").Replace("\r", "");
+
+            // Remove trailing commas
+            pattern = @"(,)(\s*[\}\]])";
+            noCommentsJson = Regex.Replace(noCommentsJson, pattern, "$2");
+
+            return noCommentsJson;
+        }
 
         private Dictionary<string, object> DeserializeJson(string json)
         {
             try
             {
-                return JsonSerializer.Deserialize<Dictionary<string, object>>(json);
+                json = RemoveCommentsAndEscapeNewlines(json);
+                return JsonSerializer.Deserialize<Dictionary<string, object>>(RemoveCommentsAndEscapeNewlines(json));
             }
             catch (JsonException ex)
             {
@@ -55,15 +82,6 @@ namespace JsonEditor
                 Console.WriteLine($"Error deserializing JSON: {ex.Message}");
                 return null;
             }
-        }
-
-        private string SerializeJson(Dictionary<string, object> jsonData)
-        {
-            var options = new JsonSerializerOptions
-            {
-                WriteIndented = true
-            };
-            return JsonSerializer.Serialize(jsonData, options);
         }
     }
 }
