@@ -63,8 +63,8 @@ jobs:
 
     - name: List directory contents
       run: |
-        echo "Listing contents of /home/runner/work/JsonEditor/windows-standalone:"
-        ls -al /home/runner/work/JsonEditor/windows-standalone
+        echo "Listing contents of /home/runner/work/windows-standalone:"
+        ls -al /home/runner/work/JsonEditor/JsonEditor/windows-standalone
     
     - name: Calculate previous version
       id: prev_version
