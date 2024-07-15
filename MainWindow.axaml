@@ -80,12 +80,12 @@
 			<RowDefinition Height="*"/>
 		</Grid.RowDefinitions>
 		<TabControl Name="TabControl" Grid.Row="2">
-			<TabItem Header="Generated Controls">
+			<TabItem Header="Visual Editor">
 				<ScrollViewer VerticalScrollBarVisibility="Auto">
 					<StackPanel Name="JsonEditorPanel" Orientation="Vertical" Margin="10"/>
 				</ScrollViewer>
 			</TabItem>
-			<TabItem Header="Raw Editor">
+			<TabItem Header="Raw">
 				<avaloniaEdit:TextEditor Name="JsonRawEditor" Margin="10" Foreground="White" ShowLineNumbers="True"/>
 			</TabItem>
 		</TabControl>

@@ -42,6 +42,24 @@ namespace JsonEditor
 
             saveButton.Click += async (sender, e) =>
             {
+                var tabControl = this.FindControl<TabControl>("TabControl");
+                if (tabControl.SelectedIndex == 0)
+                {
+                    if (!ValidateGeneratedControls())
+                    {
+                        ShowErrorMessage("Validation failed. Please check the data types of all fields.");
+                        return;
+                    }
+                }
+                else if (tabControl.SelectedIndex == 1)
+                {
+                    if (!ValidateJsonStructure(JsonRawEditor.Text))
+                    {
+                        ShowErrorMessage("Invalid JSON structure. Please correct the JSON and try again.");
+                        return;
+                    }
+                }
+
                 await SaveJson();
             };
 
