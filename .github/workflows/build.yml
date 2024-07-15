@@ -49,3 +49,36 @@ jobs:
       with:
         name: windows-standalone
         path: ./bin/Release/
+
+
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ env.VERSION }}
+        release_name: Release ${{ env.VERSION }}
+        draft: false
+        body: |
+          **Full Changelog**: https://github.com/galadril/JsonEditor/compare/${{ env.PREV_VERSION }}...${{ env.VERSION }}
+
+          ### ⬇️ Downloads:
+          **Windows**
+          * [🖥️ Standalone](https://github.com/galadril/JsonEditor/releases/download/${{ env.VERSION }}/windows-standalone.zip)
+    
+    - name: Zip Windows Standalone
+      run: |
+        cd windows-standalone
+        zip -r ../windows-standalone.zip .
+
+    - name: Upload Release Asset (Windows Standalone)
+      id: upload-release-asset-windows-standalone
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} 
+        asset_path: ./windows-standalone.zip
+        asset_name: windows-standalone.zip
+        asset_content_type: application/zip
