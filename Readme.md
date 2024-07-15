@@ -8,7 +8,6 @@ A simple and intuitive JSON editor built with AvaloniaUI, designed to provide a 
 - **Visual Editing**: Easily edit JSON files using the generated UI controls based on the JSON structure.
 - **Raw JSON Editing**: Directly edit the JSON in a text editor with syntax highlighting and line numbers.
 - **Validation**: Validates JSON structure in real-time to ensure the integrity of the data.
-- **Customizable UI**: Theme support to switch between light and dark modes for better visibility.
 
 ## Screenshots
 
@@ -17,13 +16,7 @@ A simple and intuitive JSON editor built with AvaloniaUI, designed to provide a 
 ![image](https://github.com/user-attachments/assets/e29a523c-deb3-4896-9f7b-9b434fc5c90e)
 
 
-## Getting Started
-
-### Prerequisites
-- .NET 8.0 or higher
-- AvaloniaUI
-
-### Installation
+## Installation
 See releases and download the zip containing all files + .exe
 
 
