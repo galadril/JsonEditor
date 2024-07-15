@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Avalonia.Media;
 using Avalonia.Styling;
+using AvaloniaEdit;
 
 namespace JsonEditor
 {
@@ -50,7 +51,7 @@ namespace JsonEditor
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            JsonRawEditor = this.FindControl<TextBlock>("JsonRawEditor");
+            JsonRawEditor = this.FindControl<TextEditor>("JsonRawEditor");
             JsonEditorPanel = this.FindControl<StackPanel>("JsonEditorPanel");
         }
 

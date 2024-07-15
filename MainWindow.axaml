@@ -33,7 +33,7 @@
 				</ScrollViewer>
 			</TabItem>
 			<TabItem Header="Raw Editor">
-                <TextBlock Name="JsonRawEditor" Text="PLACEHOLDER" Margin="10"/>
+				<avaloniaEdit:TextEditor Name="JsonRawEditor" Margin="10" Foreground="White" ShowLineNumbers="True"/>
 			</TabItem>
 		</TabControl>
 	</Grid>
