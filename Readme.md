@@ -10,6 +10,12 @@ A simple and intuitive JSON editor built with AvaloniaUI, designed to provide a 
 - **Validation**: Validates JSON structure in real-time to ensure the integrity of the data.
 - **Customizable UI**: Theme support to switch between light and dark modes for better visibility.
 
+## Screenshots
+
+![image](https://github.com/user-attachments/assets/339dec18-823a-45b9-a1a8-8002151be158) 
+
+![image](https://github.com/user-attachments/assets/e29a523c-deb3-4896-9f7b-9b434fc5c90e)
+
 
 ## Getting Started
 
