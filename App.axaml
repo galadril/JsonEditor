@@ -10,5 +10,6 @@
 	<Application.Styles>
 		<StyleInclude Source="avares://Semi.Avalonia/Themes/Index.axaml" />
 		<StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+		<StyleInclude Source="avares://JsonEditor/Icons.axaml" />
 	</Application.Styles>
 </Application>
