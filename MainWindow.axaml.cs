@@ -1,7 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
-using AvaloniaEdit;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -51,7 +50,7 @@ namespace JsonEditor
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
-            JsonRawEditor = this.FindControl<TextEditor>("JsonRawEditor");
+            JsonRawEditor = this.FindControl<TextBlock>("JsonRawEditor");
             JsonEditorPanel = this.FindControl<StackPanel>("JsonEditorPanel");
         }
 
@@ -68,6 +67,51 @@ namespace JsonEditor
             }
         }
 
+       private object ProcessControl(Control control)
+        {
+            if (control.Tag is JsonValueKind valueKind)
+            {
+                switch (valueKind)
+                {
+                    case JsonValueKind.String:
+                        if (control is TextBox textBox)
+                        {
+                            return textBox.Text;
+                        }
+                        break;
+                    case JsonValueKind.Number:
+                        if (control is TextBox textBox2)
+                        {
+                            if (double.TryParse(textBox2.Text, out var number))
+                            {
+                                return number;
+                            }
+                        }
+                        break;
+                    case JsonValueKind.True:
+                    case JsonValueKind.False:
+                        if (control is CheckBox checkBox)
+                        {
+                            return checkBox.IsChecked == true;
+                        }
+                        break;
+                    case JsonValueKind.Object:
+                        if (control is StackPanel panel)
+                        {
+                            return ProcessPanel(panel);
+                        }
+                        break;
+                    case JsonValueKind.Array:
+                        if (control is StackPanel arrayPanel)
+                        {
+                            return ProcessArrayPanel(arrayPanel);
+                        }
+                        break;
+                }
+            }
+            return null;
+        }
+
         private Dictionary<string, object> ProcessPanel(Panel panel)
         {
             if (panel == null)
@@ -76,43 +120,34 @@ namespace JsonEditor
             var result = new Dictionary<string, object>();
             foreach (Control child in panel.Children)
             {
-                if (child is StackPanel stackPanel && stackPanel.Children.Count > 1 && stackPanel.Children[0] is TextBlock keyTextBlock)
+                if (child is StackPanel stackPanel && stackPanel.Children[0] is TextBlock keyTextBlock)
                 {
                     var key = keyTextBlock.Text;
-                    var valueControl = stackPanel.Children[1] as Control;
-                    var value = ProcessControl(valueControl);
-                    if (value != null)
+                    if (stackPanel.Children.Count > 1 && stackPanel.Children[1] is Control valueControl)
                     {
-                        result[key] = value;
+                        var value = ProcessControl(valueControl);
+                        if (value != null)
+                        {
+                            result[key] = value;
+                        }
                     }
                 }
             }
             return result;
         }
 
-        private object ProcessControl(Control control)
+        private List<object> ProcessArrayPanel(Panel panel)
         {
-            if (control == null)
-                return null;
-
-            switch (control)
+            var array = new List<object>();
+            foreach (Control itemControl in panel.Children)
             {
-                case TextBox textBox:
-                    return textBox.Text;
-                case CheckBox checkBox:
-                    return checkBox.IsChecked == true;
-                case StackPanel stackPanel:
-                    if (stackPanel.Children.Count > 0 && stackPanel.Children[0] is TextBlock)
-                    {
-                        return ProcessPanel(stackPanel);
-                    }
-                    break;
-                default:
-                    // Handle other control types if needed
-                    break;
+                var value = ProcessControl(itemControl);
+                if (value != null)
+                {
+                    array.Add(value);
+                }
             }
-
-            return null;
+            return array;
         }
 
         private void UpdateJsonEditorPanel(Dictionary<string, object> jsonData)
