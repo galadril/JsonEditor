@@ -9,6 +9,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit;
 using System;
+using Avalonia.Input;
 
 namespace JsonEditor
 {
@@ -25,6 +26,12 @@ namespace JsonEditor
             var loadButton = this.FindControl<Button>("LoadJsonButton");
             var saveButton = this.FindControl<Button>("SaveJsonButton");
 
+            this.FindControl<Button>("MinimizeButton").Click += (s, e) => this.WindowState = WindowState.Minimized;
+            this.FindControl<Button>("MaximizeButton").Click += (s, e) =>
+                this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            this.FindControl<Button>("CloseButton").Click += (s, e) => this.Close();
+            this.FindControl<Border>("TitleBar").PointerPressed += TitleBar_PointerPressed;
+
             loadButton.Click += async (sender, e) =>
             {
                 var viewModel = (MainWindowViewModel)DataContext;
@@ -40,6 +47,13 @@ namespace JsonEditor
 
             var tabControl = this.FindControl<TabControl>("TabControl");
             tabControl.SelectionChanged += TabControl_SelectionChanged;
+        }
+        private void TitleBar_PointerPressed(object sender, PointerPressedEventArgs e)
+        {
+            if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
+            {
+                BeginMoveDrag(e);
+            }
         }
 
         private bool isProgrammaticTabChange = false; // Flag to indicate programmatic tab changes
