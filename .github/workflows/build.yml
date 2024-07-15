@@ -50,6 +50,31 @@ jobs:
         name: windows-standalone
         path: ./bin/Release/
 
+  create-release:
+    if: github.ref == 'refs/heads/main'
+    needs: [build-windows]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all workflow run artifacts
+      uses: actions/download-artifact@v4
+
+    - name: List directory contents
+      run: |
+        echo "Listing contents of /home/runner/work/windows-standalone:"
+        ls -al /home/runner/work/JsonEditor/JsonEditor/windows-standalone
+    
+    - name: Calculate previous version
+      id: prev_version
+      run: |
+        VERSION=${{ env.VERSION }}
+        MAJOR=$(echo $VERSION | cut -d. -f1)
+        MINOR=$(echo $VERSION | cut -d. -f2)
+        PATCH=$(echo $VERSION | cut -d. -f3)
+        PREV_VERSION="$MAJOR.$MINOR.$((PATCH - 1))"
+        echo "PREV_VERSION=$PREV_VERSION" >> $GITHUB_ENV
 
     - name: Create Release
       id: create_release
