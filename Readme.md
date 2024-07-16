@@ -1,7 +1,10 @@
 ﻿
 # JSON Editor
 
+<img src="https://github.com/user-attachments/assets/0f47e988-295b-4ea9-849c-56353e902739" align="right" height="250" width="250" />
+
 A simple and intuitive JSON editor built with AvaloniaUI, designed to provide a visual interface for editing JSON files along with a raw text editor for manual adjustments.
+<br/><br/>
 
 ## Features
 
