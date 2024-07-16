@@ -6,6 +6,7 @@
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         mc:Ignorable="d"
         x:Class="JsonEditor.MainWindow"
+        Icon="/Assets/icon.png"
         Title="JSON Editor"
         Width="1200" Height="800" Margin="16"
         ExtendClientAreaToDecorationsHint="True"
