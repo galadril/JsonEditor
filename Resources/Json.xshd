@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<SyntaxDefinition name="Json" extensions=".json" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+	<Color name="PropertyName" foreground="#ADD795" exampleText="propertyName" />
+	<Color name="StringLiteral" foreground="#D6936B" exampleText="stringLiteral" />
+	<Color name="Number" foreground="#ADD795" exampleText="1234" />
+	<Color name="BooleanNull" foreground="#41C2B0" exampleText="true, false, null" />
+	<Color name="Punctuation" foreground="#3988D6" exampleText="{}[],:" />
+	<Color name="Url" foreground="#FF5733" exampleText="https://example.com" />
+	<Color name="Variable" foreground="#FFC0CB" exampleText="{variable}" />
+
+	<RuleSet ignoreCase="false">
+		<Span color="PropertyName">
+			<Begin>"</Begin>
+			<End>(?=:)</End>
+		</Span>
+		<Span color="StringLiteral" multiline="true">
+			<Begin>"</Begin>
+			<End>"</End>
+		</Span>
+		<Span color="Url" multiline="true">
+			<Begin>"http://</Begin>
+			<End>"</End>
+		</Span>
+		<Span color="Url" multiline="true">
+			<Begin>"https://</Begin>
+			<End>"</End>
+		</Span>
+		<Span color="Variable">
+			<Begin>{</Begin>
+			<End>}</End>
+		</Span>
+		<Rule color="Number">\b0[xX][0-9a-fA-F]+|(\b\d+(\.[0-9]+)?|\.[0-9]+)([eE][+-]?[0-9]+)?</Rule>
+		<Rule color="BooleanNull">\btrue\b|\bfalse\b|\bnull\b</Rule>
+		<Rule color="Punctuation">[\{\}\[\]:,]</Rule>
+	</RuleSet>
+</SyntaxDefinition>

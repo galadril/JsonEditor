@@ -10,6 +10,9 @@ using Avalonia.Styling;
 using AvaloniaEdit;
 using System;
 using Avalonia.Input;
+using AvaloniaEdit.Highlighting.Xshd;
+using AvaloniaEdit.Highlighting;
+using System.Reflection;
 
 namespace JsonEditor
 {
@@ -124,20 +127,20 @@ namespace JsonEditor
 
         private bool ValidateGeneratedControls()
         {
-            bool isValid = true; // Assume all controls are valid initially
+            var isValid = true; // Assume all controls are valid initially
 
             // Define a red border for indicating validation errors
             var errorBorderBrush = new SolidColorBrush(Colors.Red);
             var normalBorderBrush = new SolidColorBrush(Colors.Transparent); // Normal state
 
             // Iterate through each control in the JsonEditorPanel
-            foreach (Control control in JsonEditorPanel.Children)
+            foreach (var control in JsonEditorPanel.Children)
             {
                 if (control is StackPanel stackPanel && stackPanel.Children.Count > 1)
                 {
                     var valueControl = stackPanel.Children[1];
                     var expectedType = (JsonValueKind)valueControl.Tag;
-                    bool controlIsValid = true; // Assume the current control is valid
+                    var controlIsValid = true; // Assume the current control is valid
 
                     switch (expectedType)
                     {
@@ -235,7 +238,7 @@ namespace JsonEditor
             };
 
             // Create an OK button to close the dialog
-            Button okButton = new Button
+            var okButton = new Button
             {
                 Content = "OK",
                 HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center,
@@ -264,6 +267,16 @@ namespace JsonEditor
             AvaloniaXamlLoader.Load(this);
             JsonRawEditor = this.FindControl<TextEditor>("JsonRawEditor");
             JsonEditorPanel = this.FindControl<StackPanel>("JsonEditorPanel");
+
+            JsonRawEditor.TextArea.TextView.LinkTextForegroundBrush = Brushes.White;
+            JsonRawEditor.TextArea.TextView.LinkTextUnderline = false;
+
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "JsonEditor.Resources.Json.xshd";
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
+            using var xmlReader = new System.Xml.XmlTextReader(reader);
+            JsonRawEditor.SyntaxHighlighting = HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
         }
 
         private async Task SaveJson()
@@ -330,7 +343,7 @@ namespace JsonEditor
                 return null;
 
             var result = new Dictionary<string, object>();
-            foreach (Control child in panel.Children)
+            foreach (var child in panel.Children)
             {
                 if (child is StackPanel stackPanel && stackPanel.Children[0] is TextBlock keyTextBlock)
                 {
@@ -351,7 +364,7 @@ namespace JsonEditor
         private List<object> ProcessArrayPanel(Panel panel)
         {
             var array = new List<object>();
-            foreach (Control itemControl in panel.Children)
+            foreach (var itemControl in panel.Children)
             {
                 var value = ProcessControl(itemControl);
                 if (value != null)
@@ -390,7 +403,7 @@ namespace JsonEditor
         private Control GenerateControlForValue(string key, object value, bool isArrayItem = false)
         {
             Control control = null;
-            JsonValueKind valueKind = JsonValueKind.Undefined;
+            var valueKind = JsonValueKind.Undefined;
             StackPanel arrayPanel = null; // Declare outside to be accessible for the "Add" button logic
 
             // Common styling for flat UI
@@ -476,7 +489,7 @@ namespace JsonEditor
             else
             {
                 // Fallback to the original behavior for simple types
-                JsonValueKind itemKind = templateElement.GetArrayLength() > 0 ? templateElement[0].ValueKind : JsonValueKind.String;
+                var itemKind = templateElement.GetArrayLength() > 0 ? templateElement[0].ValueKind : JsonValueKind.String;
                 object newItem = GetDefaultValueForKind(itemKind);
                 var newItemControl = GenerateControlForValue(key, newItem, true);
                 arrayPanel.Children.Insert(arrayPanel.Children.Count - 1, newItemControl);
@@ -486,8 +499,8 @@ namespace JsonEditor
         private object GetDefaultObjectFromTemplate(JsonElement templateObject)
         {
             var options = new JsonSerializerOptions { WriteIndented = true };
-            string jsonRepresentation = JsonSerializer.Serialize(templateObject, options);
-            using (JsonDocument doc = JsonDocument.Parse(jsonRepresentation))
+            var jsonRepresentation = JsonSerializer.Serialize(templateObject, options);
+            using (var doc = JsonDocument.Parse(jsonRepresentation))
             {
                 return doc.RootElement.Clone();
             }
@@ -495,7 +508,7 @@ namespace JsonEditor
 
         private JsonElement GetDefaultValueForKind(JsonValueKind kind)
         {
-            string jsonRepresentation = kind switch
+            var jsonRepresentation = kind switch
             {
                 JsonValueKind.String => "\"Text\"",
                 JsonValueKind.Number => "0",
@@ -506,7 +519,7 @@ namespace JsonEditor
                 _ => "null"
             };
 
-            using (JsonDocument doc = JsonDocument.Parse(jsonRepresentation))
+            using (var doc = JsonDocument.Parse(jsonRepresentation))
             {
                 return doc.RootElement.Clone();
             }
