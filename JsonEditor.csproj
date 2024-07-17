@@ -10,6 +10,12 @@
 	<ItemGroup>
 		<AvaloniaResource Include="Assets\**" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Json.xshd" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\Json.xshd" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Avalonia" Version="11.0.11" />

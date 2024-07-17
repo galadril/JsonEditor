@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="https://github.com/avaloniaui/d"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-		xmlns:icons="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
+        xmlns:icons="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls"
         xmlns:avaloniaEdit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
         mc:Ignorable="d"
         x:Class="JsonEditor.MainWindow"
@@ -13,83 +13,85 @@
         ExtendClientAreaChromeHints="NoChrome"
         ExtendClientAreaTitleBarHeightHint="0">
 
-	<Window.Styles>
-		<Style Selector="PathIcon">
-			<Setter Property="Foreground" Value="White" />
-		</Style>
-	</Window.Styles>
+    <Window.Styles>
+        <Style Selector="PathIcon">
+            <Setter Property="Foreground" Value="White" />
+        </Style>
+    </Window.Styles>
 
-	<StackPanel>
-	<Border Name="TitleBar" Background="#333333" Height="40" Grid.Row="0">
-		<Grid>
-			<Grid.ColumnDefinitions>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="*"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-				<ColumnDefinition Width="Auto"/>
-			</Grid.ColumnDefinitions>
-			<Button Grid.Column="0" x:Name="LoadJsonButton" Margin="10,0">
-				<Button.Content>
-					<Grid Width="16" Height="16">
-						<PathIcon Data="{StaticResource icon_load}" />
-					</Grid>
-				</Button.Content>
-			</Button>
+    <DockPanel>
+        <Border Name="TitleBar" Background="#333333" Height="40" DockPanel.Dock="Top">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="0" x:Name="LoadJsonButton" Margin="10,0">
+                    <Button.Content>
+                        <Grid Width="16" Height="16">
+                            <PathIcon Data="{StaticResource icon_load}" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
 
-			<Button Grid.Column="1" x:Name="SaveJsonButton" Margin="0,0,10,0">
-				<Button.Content>
-					<Grid Width="16" Height="16">
-						<PathIcon Data="{StaticResource icon_save}" />
-					</Grid>
-				</Button.Content>
-			</Button>
+                <Button Grid.Column="1" x:Name="SaveJsonButton" Margin="0,0,10,0">
+                    <Button.Content>
+                        <Grid Width="16" Height="16">
+                            <PathIcon Data="{StaticResource icon_save}" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
 
-			<TextBlock Text="JSON Editor" VerticalAlignment="Center" Margin="10,0" Grid.Column="2"/>
+                <TextBlock Text="JSON Editor" VerticalAlignment="Center" Margin="10,0" Grid.Column="2"/>
 
-			<Button Name="MinimizeButton" Grid.Column="3">
-				<Button.Content>
-					<Grid Width="16" Height="16">
-						<PathIcon Data="{StaticResource icon_mini}" />
-					</Grid>
-				</Button.Content>
-			</Button>
+                <Button Name="MinimizeButton" Grid.Column="3">
+                    <Button.Content>
+                        <Grid Width="16" Height="16">
+                            <PathIcon Data="{StaticResource icon_mini}" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
 
-			<Button Name="MaximizeButton" Grid.Column="4">
-				<Button.Content>
-					<Grid Width="16" Height="16">
-						<PathIcon Data="{StaticResource icon_maxi}" />
-					</Grid>
-				</Button.Content>
-			</Button>
+                <Button Name="MaximizeButton" Grid.Column="4">
+                    <Button.Content>
+                        <Grid Width="16" Height="16">
+                            <PathIcon Data="{StaticResource icon_maxi}" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
 
-			<Button Name="CloseButton" Grid.Column="5">
-				<Button.Content>
-					<Grid Width="16" Height="16">
-						<PathIcon Data="{StaticResource icon_close}" />
-					</Grid>
-				</Button.Content>
-			</Button>
-		</Grid>
-	</Border>
+                <Button Name="CloseButton" Grid.Column="5">
+                    <Button.Content>
+                        <Grid Width="16" Height="16">
+                            <PathIcon Data="{StaticResource icon_close}" />
+                        </Grid>
+                    </Button.Content>
+                </Button>
+            </Grid>
+        </Border>
 
-	<Grid Margin="16">
-		<Grid.RowDefinitions>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="Auto"/>
-			<RowDefinition Height="*"/>
-		</Grid.RowDefinitions>
-		<TabControl Name="TabControl" Grid.Row="2">
-			<TabItem Header="Visual Editor">
-				<ScrollViewer VerticalScrollBarVisibility="Auto">
-					<StackPanel Name="JsonEditorPanel" Orientation="Vertical" Margin="10"/>
-				</ScrollViewer>
-			</TabItem>
-			<TabItem Header="Raw">
-				<avaloniaEdit:TextEditor Name="JsonRawEditor" Margin="10" Foreground="White" ShowLineNumbers="True"/>
-			</TabItem>
-		</TabControl>
-	</Grid>
-	</StackPanel>
+        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
+            <Grid Margin="16">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TabControl Name="TabControl" Grid.Row="2">
+                    <TabItem Header="Visual Editor">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <StackPanel Name="JsonEditorPanel" Orientation="Vertical" Margin="10"/>
+                        </ScrollViewer>
+                    </TabItem>
+                    <TabItem Header="Raw">
+                        <avaloniaEdit:TextEditor Name="JsonRawEditor" Margin="10" Foreground="White" ShowLineNumbers="True"/>
+                    </TabItem>
+                </TabControl>
+            </Grid>
+        </ScrollViewer>
+    </DockPanel>
 </Window>
