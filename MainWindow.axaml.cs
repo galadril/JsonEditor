@@ -9,10 +9,14 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit;
 using System;
+using System.Diagnostics;
 using Avalonia.Input;
 using AvaloniaEdit.Highlighting.Xshd;
 using AvaloniaEdit.Highlighting;
 using System.Reflection;
+using Avalonia.Layout;
+using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace JsonEditor
 {
@@ -277,6 +281,36 @@ namespace JsonEditor
             using var reader = new StreamReader(stream);
             using var xmlReader = new System.Xml.XmlTextReader(reader);
             JsonRawEditor.SyntaxHighlighting = HighlightingLoader.Load(xmlReader, HighlightingManager.Instance);
+            
+            // Create and attach the context menu
+            var contextMenu = new ContextMenu();
+            var cutMenuItem = new MenuItem { Header = "Cut" };
+            cutMenuItem.Click += (sender, e) => ExecuteCommand(ApplicationCommands.Cut);
+            var copyMenuItem = new MenuItem { Header = "Copy" };
+            copyMenuItem.Click += (sender, e) => ExecuteCommand(ApplicationCommands.Copy);
+            var pasteMenuItem = new MenuItem { Header = "Paste" };
+            pasteMenuItem.Click += (sender, e) => ExecuteCommand(ApplicationCommands.Paste);
+
+            contextMenu.Items.Add(cutMenuItem);
+            contextMenu.Items.Add(copyMenuItem);
+            contextMenu.Items.Add(pasteMenuItem);
+            JsonRawEditor.ContextMenu = contextMenu;
+        }
+        private void ExecuteCommand(RoutedCommand command)
+        {
+            // Get the focused control
+            if (command == ApplicationCommands.Cut)
+            {
+                JsonRawEditor.Cut();
+            }
+            else if (command == ApplicationCommands.Copy)
+            {
+                JsonRawEditor.Copy();
+            }
+            else if (command == ApplicationCommands.Paste)
+            {
+                JsonRawEditor.Paste();
+            }
         }
 
         private async Task SaveJson()
@@ -302,6 +336,10 @@ namespace JsonEditor
                         if (control is TextBox textBox)
                         {
                             return textBox.Text;
+                        }
+                        else if (control is StackPanel stackPanel && stackPanel.Children.Count > 0 && stackPanel.Children[0] is TextBox textBoxInPanel)
+                        {
+                            return textBoxInPanel.Text;
                         }
                         break;
                     case JsonValueKind.Number:
@@ -400,6 +438,33 @@ namespace JsonEditor
             }
         }
 
+             private void GenerateUI(Dictionary<string, object> jsonData, Panel parent, bool isSub = false)
+        {
+            foreach (var kvp in jsonData)
+            {
+                var stackPanel = new StackPanel
+                {
+                    Orientation = isSub ? Avalonia.Layout.Orientation.Vertical : Avalonia.Layout.Orientation.Horizontal,
+                    Margin = new Thickness(0, 5)
+                };
+
+                var textBlock = new TextBlock
+                {
+                    Text = kvp.Key,
+                    Margin = new Thickness(0, 5, 10, 0),
+                    TextAlignment = TextAlignment.Start,
+                    VerticalAlignment = isSub ? VerticalAlignment.Center : VerticalAlignment.Top
+                };
+
+                stackPanel.Children.Add(textBlock);
+
+                var valueControl = GenerateControlForValue(kvp.Key, kvp.Value);
+                stackPanel.Children.Add(valueControl);
+
+                parent.Children.Add(stackPanel);
+            }
+        }
+
         private Control GenerateControlForValue(string key, object value, bool isArrayItem = false)
         {
             Control control = null;
@@ -417,7 +482,67 @@ namespace JsonEditor
                     switch (jsonElement.ValueKind)
                     {
                         case JsonValueKind.String:
-                            control = new TextBox { Text = jsonElement.GetString(), Styles = { flatStyle } };
+                            string textValue = jsonElement.GetString();
+                            control = new TextBox { Text = textValue, Styles = { flatStyle }};
+
+                            // Check if the string value is a file path
+                            if (IsFilePath(textValue))
+                            {
+                                var openFolderButton = new Button
+                                {
+                                    Margin = new Thickness(5, 0, 0, 0),
+                                    HorizontalAlignment = HorizontalAlignment.Left
+                                };
+                                if (this.TryFindResource("icon_folder", out object iconGeometry) && iconGeometry is StreamGeometry geometry)
+                                {
+                                    var pathIcon = new PathIcon
+                                    {
+                                        Data = geometry,
+                                        Width = 16,
+                                        Height = 16
+                                    };
+                                    openFolderButton.Content = pathIcon;
+                                }
+                                openFolderButton.Click += (sender, e) => OpenExplorer(textValue);
+
+                                var stackPanel = new StackPanel
+                                {
+                                    Orientation = Orientation.Horizontal,
+                                    HorizontalAlignment = HorizontalAlignment.Left
+                                };
+                                stackPanel.Children.Add(control);
+                                stackPanel.Children.Add(openFolderButton);
+
+                                control = stackPanel;
+                            }
+                            else  if (IsUrl(textValue))
+                            {
+                                var openBrowserButton = new Button
+                                {
+                                    Margin = new Thickness(5, 0, 0, 0),
+                                    HorizontalAlignment = HorizontalAlignment.Left
+                                };
+                                if (this.TryFindResource("icon_browser", out object iconGeometry) && iconGeometry is StreamGeometry geometry)
+                                {
+                                    var pathIcon = new PathIcon
+                                    {
+                                        Data = geometry,
+                                        Width = 16,
+                                        Height = 16
+                                    };
+                                    openBrowserButton.Content = pathIcon;
+                                }
+
+                                openBrowserButton.Click += (sender, e) => OpenBrowser(textValue);
+                                var stackPanel = new StackPanel
+                                {
+                                    Orientation = Orientation.Horizontal,
+                                    HorizontalAlignment = HorizontalAlignment.Left
+                                };
+                                stackPanel.Children.Add(control);
+                                stackPanel.Children.Add(openBrowserButton);
+                                control = stackPanel;
+                            }
                             break;
                         case JsonValueKind.Number:
                             control = new TextBox { Text = jsonElement.GetRawText(), Styles = { flatStyle } };
@@ -425,14 +550,13 @@ namespace JsonEditor
                         case JsonValueKind.Object:
                             var innerPanel = new StackPanel { Margin = new Thickness(10, 5, 0, 5) };
                             var innerDict = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonElement.GetRawText());
-                            GenerateUI(innerDict, innerPanel);
+                            GenerateUI(innerDict, innerPanel, true);
                             control = innerPanel;
                             break;
                         case JsonValueKind.Array:
                             arrayPanel = new StackPanel { Styles = { flatStyle } };
-                            foreach (var item in jsonElement.EnumerateArray())
+                            foreach (var itemControl in jsonElement.EnumerateArray().Select(item => GenerateControlForValue(key, item, true)))
                             {
-                                var itemControl = GenerateControlForValue(key, item, true);
                                 arrayPanel.Children.Add(itemControl);
                             }
                             control = arrayPanel;
@@ -457,17 +581,25 @@ namespace JsonEditor
             // Moved outside the switch statement
             if (value is JsonElement element && element.ValueKind == JsonValueKind.Array && !isArrayItem && arrayPanel != null)
             {
-                var addButton = new Button { Margin = new Thickness(5, 0, 0, 0) };
-                var pathIcon = new PathIcon
+                var addButton = new Button
                 {
-                    Data = Geometry.Parse("M12 7C12.4142 7 12.75 7.33579 12.75 7.75V11.25H16.25C16.6642 11.25 17 11.5858 17 12C17 12.4142 16.6642 12.75 16.25 12.75H12.75V16.25C12.75 16.6642 12.4142 17 12 17C11.5858 17 11.25 16.6642 11.25 16.25V12.75H7.75C7.33579 12.75 7 12.4142 7 12C7 11.5858 7.33579 11.25 7.75 11.25H11.25V7.75C11.25 7.33579 11.5858 7 12 7Z M3 6.25C3 4.45507 4.45507 3 6.25 3H17.75C19.5449 3 21 4.45507 21 6.25V17.75C21 19.5449 19.5449 21 17.75 21H6.25C4.45507 21 3 19.5449 3 17.75V6.25ZM6.25 4.5C5.2835 4.5 4.5 5.2835 4.5 6.25V17.75C4.5 18.7165 5.2835 19.5 6.25 19.5H17.75C18.7165 19.5 19.5 18.7165 19.5 17.75V6.25C19.5 5.2835 18.7165 4.5 17.75 4.5H6.25Z"),
-                    Width = 16,
-                    Height = 16
+                    Margin = new Thickness(0, 0, 0, 0),
+                    HorizontalContentAlignment = HorizontalAlignment.Center, // Center the content horizontally
+                    HorizontalAlignment = HorizontalAlignment.Left // Prevent the button from stretching
                 };
 
-                addButton.Content = pathIcon;
-                addButton.Click += (sender, e) => AddArrayItem(key, arrayPanel, element);
+                if (this.TryFindResource("icon_add", out object iconGeometry) && iconGeometry is StreamGeometry geometry)
+                {
+                    var pathIcon = new PathIcon
+                    {
+                        Data = geometry,
+                        Width = 16,
+                        Height = 16
+                    };
+                    addButton.Content = pathIcon;
+                }
 
+                addButton.Click += (sender, e) => AddArrayItem(key, arrayPanel, element);
                 arrayPanel.Children.Add(addButton);
             }
 
@@ -475,6 +607,19 @@ namespace JsonEditor
             control.Tag = valueKind;
             return control;
         }
+
+        private bool IsFilePath(string text)
+        {
+            string pattern = @"^(?:[a-zA-Z]:|[\\/]{2}[^\\/]+[\\/]+[^\\/]+)?[\\/]+[^\\/][^:*?""<>|/]+(?:\\[^:*?""<>|/]+)*\\?$";
+            return !string.IsNullOrWhiteSpace(text) && Regex.IsMatch(text, pattern);
+        }
+
+        private bool IsUrl(string text)
+        {
+            string pattern = @"^(http|https):\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}(:[0-9]+)?(\/.*)?$";
+            return !string.IsNullOrWhiteSpace(text) && Regex.IsMatch(text, pattern);
+        }
+
 
         private void AddArrayItem(string key, Panel arrayPanel, JsonElement templateElement)
         {
@@ -536,6 +681,41 @@ namespace JsonEditor
             {
                 JsonRawEditor.Text = string.Empty;
             }
+        }
+
+        public void OpenExplorer(string path)
+        {
+            Task.Run(() =>
+            {
+                var process = new System.Diagnostics.Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "explorer.exe",
+                        Arguments = path
+                    }
+                };
+
+                process.Start();
+            });
+        }
+
+        public void OpenBrowser(string url)
+        {
+            Task.Run(() =>
+            {
+                try
+                {
+                    // Use the Process.Start method to open the URL in the default browser.
+                    Process.Start(new ProcessStartInfo
+                    {
+                        FileName = url,
+                        UseShellExecute = true // This is important for .NET Core and .NET 5+ compatibility
+                    });
+                }
+                catch (Exception ex)
+                {}
+            });
         }
     }
 }
