@@ -128,85 +128,139 @@ namespace JsonEditor
                 UpdateJsonEditorPanel(jsonData);
             }
         }
+        
+        private bool ValidateControl(Control control, JsonValueKind expectedType)
+        {
+            var isValid = true; // Assume the control is valid initially
+            var errorBorderBrush = new SolidColorBrush(Colors.Red);
+            var normalBorderBrush = new SolidColorBrush(Colors.Transparent); // Normal state
+
+            switch (expectedType)
+            {
+                case JsonValueKind.String:
+                    // Check if the control is a TextBox or a StackPanel containing a TextBox
+                    if (!(control is TextBox) && !(control is StackPanel stackPanel && stackPanel.Children.Count > 0 && stackPanel.Children[0] is TextBox))
+                    {
+                        isValid = false;
+                    }
+                    break;
+                case JsonValueKind.Number:
+                    if (control is TextBox textBoxNumber)
+                    {
+                        // Check if the text can be parsed as a number
+                        if (!double.TryParse(textBoxNumber.Text, out _)) isValid = false;
+                    }
+                    else
+                    {
+                        isValid = false;
+                    }
+                    break;
+                case JsonValueKind.True:
+                case JsonValueKind.False:
+                    if (!(control is CheckBox)) isValid = false;
+                    break;
+                case JsonValueKind.Object:
+                    if (control is StackPanel nestedPanel)
+                    {
+                        // Recursively validate each child control in the nested panel
+                        foreach (var child in nestedPanel.Children)
+                        {
+                            if (child is StackPanel childPanel && childPanel.Children.Count > 1)
+                            {
+                                var valueControl = childPanel.Children[1] as Control;
+                                if (valueControl != null && valueControl.Tag is JsonValueKind childExpectedType)
+                                {
+                                    isValid &= ValidateControl(valueControl, childExpectedType); // Use bitwise AND to accumulate validity
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        isValid = false;
+                    }
+                    break;
+                case JsonValueKind.Array:
+                    if (control is StackPanel arrayPanel)
+                    {
+                        // Recursively validate each child control in the array panel
+                        foreach (var child in arrayPanel.Children)
+                        {
+                            if (child is Control arrayItemControl && arrayItemControl.Tag is JsonValueKind arrayItemExpectedType)
+                            {
+                                isValid &= ValidateControl(arrayItemControl, arrayItemExpectedType); // Use bitwise AND to accumulate validity
+                            }
+                        }
+                    }
+                    else
+                    {
+                        isValid = false;
+                    }
+                    break;
+                case JsonValueKind.Undefined:
+                case JsonValueKind.Null:
+                default:
+                    // Handle other types or unexpected cases
+                    isValid = false;
+                    break;
+            }
+
+            // Update the border of the control based on its validation status
+            if (!isValid)
+            {
+                if (control is TextBox textBoxInvalid)
+                {
+                    textBoxInvalid.BorderBrush = errorBorderBrush;
+                    textBoxInvalid.BorderThickness = new Thickness(2);
+                }
+                else if (control is StackPanel stackPanelInvalid && stackPanelInvalid.Children.Count > 0 && stackPanelInvalid.Children[0] is TextBox)
+                {
+                    // If the control is a StackPanel containing a TextBox, apply border to the TextBox
+                    var textBoxInStack = stackPanelInvalid.Children[0] as TextBox;
+                    textBoxInStack.BorderBrush = errorBorderBrush;
+                    textBoxInStack.BorderThickness = new Thickness(2);
+                }
+            }
+            else
+            {
+                // Reset to normal state if the control is valid
+                if (control is TextBox textBoxValid)
+                {
+                    textBoxValid.BorderBrush = normalBorderBrush;
+                    textBoxValid.BorderThickness = new Thickness(0);
+                }
+                else if (control is StackPanel stackPanelValid && stackPanelValid.Children.Count > 0 && stackPanelValid.Children[0] is TextBox)
+                {
+                    // If the control is a StackPanel containing a TextBox, reset border of the TextBox
+                    var textBoxInStack = stackPanelValid.Children[0] as TextBox;
+                    textBoxInStack.BorderBrush = normalBorderBrush;
+                    textBoxInStack.BorderThickness = new Thickness(0);
+                }
+            }
+
+            return isValid;
+        }
 
         private bool ValidateGeneratedControls()
         {
             var isValid = true; // Assume all controls are valid initially
-
-            // Define a red border for indicating validation errors
-            var errorBorderBrush = new SolidColorBrush(Colors.Red);
-            var normalBorderBrush = new SolidColorBrush(Colors.Transparent); // Normal state
 
             // Iterate through each control in the JsonEditorPanel
             foreach (var control in JsonEditorPanel.Children)
             {
                 if (control is StackPanel stackPanel && stackPanel.Children.Count > 1)
                 {
-                    var valueControl = stackPanel.Children[1];
-                    var expectedType = (JsonValueKind)valueControl.Tag;
-                    var controlIsValid = true; // Assume the current control is valid
-
-                    switch (expectedType)
+                    var valueControl = stackPanel.Children[1] as Control;
+                    if (valueControl != null && valueControl.Tag is JsonValueKind expectedType)
                     {
-                        case JsonValueKind.String:
-                            if (!(valueControl is TextBox)) controlIsValid = false;
-                            break;
-                        case JsonValueKind.Number:
-                            if (valueControl is TextBox textBox)
-                            {
-                                // Check if the text can be parsed as a number
-                                if (!double.TryParse(textBox.Text, out _)) controlIsValid = false;
-                            }
-                            else
-                            {
-                                controlIsValid = false;
-                            }
-                            break;
-                        case JsonValueKind.True:
-                        case JsonValueKind.False:
-                            if (!(valueControl is CheckBox)) controlIsValid = false;
-                            break;
-                        case JsonValueKind.Object:
-                            // For objects, you might want to recursively validate nested controls, if applicable
-                            if (!(valueControl is StackPanel)) controlIsValid = false;
-                            break;
-                        case JsonValueKind.Array:
-                            // For arrays, you might also want to validate each item in the array
-                            if (!(valueControl is StackPanel)) controlIsValid = false;
-                            break;
-                        default:
-                            // Handle other types or unexpected cases
-                            controlIsValid = false;
-                            break;
-                    }
-
-                    // Update the border of the control based on its validation status
-                    if (!controlIsValid)
-                    {
-                        if (valueControl is TextBox textBox)
-                        {
-                            textBox.BorderBrush = errorBorderBrush;
-                            textBox.BorderThickness = new Thickness(2);
-                        }
-                        // Add similar cases for other control types if needed
-                        isValid = false; // Mark the overall validation as failed
-                    }
-                    else
-                    {
-                        // Reset to normal state if the control is valid
-                        if (valueControl is TextBox textBox)
-                        {
-                            textBox.BorderBrush = normalBorderBrush;
-                            textBox.BorderThickness = new Thickness(0);
-                        }
-                        // Add similar reset cases for other control types if needed
+                        // Validate the control and accumulate the overall validity
+                        isValid &= ValidateControl(valueControl, expectedType);
                     }
                 }
             }
 
             return isValid; // Return the overall validation status
         }
-
 
         private bool ValidateJsonStructure(string jsonText)
         {
