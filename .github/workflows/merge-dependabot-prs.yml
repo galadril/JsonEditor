@@ -22,9 +22,9 @@ jobs:
       run: |
         for branch in $(git branch -r | grep dependabot); do
           git checkout $branch
-          git merge main
+          git merge main --allow-unrelated-histories
           git checkout main
-          git merge $branch
+          git merge $branch --allow-unrelated-histories
         done
 
     - name: Create new PR
